@@ -1,0 +1,42 @@
+name: Build WABot
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        goos: [windows, linux]
+        goarch: [amd64]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Download dependencies
+        run: go mod tidy
+
+      - name: Build binary
+        run: |
+          mkdir build
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            CGO_ENABLED=0 GOOS=windows GOARCH=${{ matrix.goarch }} go build -o build/wabot.exe
+          else
+            CGO_ENABLED=0 GOOS=linux GOARCH=${{ matrix.goarch }} go build -o build/wabot
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wabot-${{ matrix.goos }}
+          path: build/
