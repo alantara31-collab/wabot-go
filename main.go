@@ -240,8 +240,13 @@ func eventHandler(evt interface{}) {
 				status = "delivered"
 			}
 			dbConn.Exec("UPDATE messages SET status=? WHERE id=?", status, msgID)
-		}
-	}
+        }
+
+    case *events.LoggedOut:
+        fmt.Println("⚠️ WhatsApp Logged Out - meminta QR baru...")
+        waClient.Store.ID = nil
+        go connectWA()
+    }
 }
 
 // --- API HANDLERS ---
